@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Практична робота № 3: Хімічна рівновага</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; color: #1f2937; }
+    .card { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .select-field { width: 100%; padding: 0.6rem; border: 1px solid #d1d5db; border-radius: 0.375rem; background-color: #ffffff; margin-top: 0.25rem; font-size: 0.95rem; }
+    .input-num { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; text-align: center; }
+    .table-cell-input { width: 100%; padding: 0.4rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; text-align: center; font-weight: bold; }
+    .hidden { display: none !important; }
+
+    /* Спеціальні стилі для компактного PDF без обрізання */
+    #pdfContainer {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #1f2937;
+    }
+    #pdfContainer h2 { font-size: 16px; margin-bottom: 4px; }
+    #pdfContainer h3 { font-size: 13px; margin-bottom: 6px; }
+    .pdf-card { break-inside: avoid; page-break-inside: avoid; overflow-wrap: anywhere;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+    }
+    .pdf-card .flex { gap: 8px; }
+    .pdf-card .flex span:last-child { white-space: nowrap; }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { background: #fff !important; padding: 0 !important; }
+      header, #page1, #page2, #page3, #page4, #page5, .no-print { display: none !important; }
+      #page6 { box-shadow: none !important; padding: 0 !important; }
+      #pdfContainer { border: none !important; }
+      .pdf-card { break-inside: avoid; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body class="p-3 md:p-8">
+  <div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- ШАПКА РОБОТИ -->
+    <header class="card p-6 border-l-8 border-blue-600">
+      <h1 class="text-xl md:text-2xl font-bold text-gray-800">Харківський машинобудівний фаховий коледж</h1>
+      <h2 class="text-lg md:text-xl font-semibold text-blue-700 mt-1">Практична робота № 3</h2>
+      <p class="text-gray-600 font-medium text-sm md:text-base">Тема: Розв’язування розрахункових задач на хімічну рівновагу</p>
+      <div class="flex justify-between items-center mt-3 pt-2 border-t text-xs md:text-sm text-gray-500">
+        <span>Максимальна оцінка: 8 балів (по 2 бали за кожне завдання)</span>
+        <span id="pageIndicator" class="font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Крок 1 з 6</span>
+      </div>
+    </header>
+
+    <!-- СТОРІНКА 1: АВТОРИЗАЦІЯ -->
+    <div id="page1" class="card p-6 space-y-4">
+      <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Авторизація студента</h3>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Прізвище та ім’я студента</label>
+        <input type="text" id="studentName" class="select-field" placeholder="Наприклад: Коваленко Олексій">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Академічна група</label>
+        <input type="text" id="studentGroup" class="select-field" placeholder="Наприклад: ВД-101">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Оберіть ваш варіант (1-30)</label>
+        <select id="variantSelect" class="select-field">
+          <option value="">-- Виберіть варіант зі списку --</option>
+        </select>
+      </div>
+      <button id="btnStart" type="button" onclick="startWork()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md transition shadow mt-4 cursor-pointer">
+        Розпочати виконання роботи
+      </button>
+    </div>
+
+    <!-- СТОРІНКА 2: ЗАВДАННЯ 1 -->
+    <div id="page2" class="card p-6 hidden space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-lg text-gray-800">Завдання 1 (2 бали)</h3>
+        <span class="text-xs font-semibold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded">Закон діючих мас</span>
+      </div>
+      
+      <p id="t1TaskText" class="text-gray-800 font-medium bg-blue-50 p-4 rounded-md border border-blue-200 text-sm md:text-base leading-relaxed"></p>
+      
+      <div class="space-y-4 bg-gray-50 p-4 rounded-md border">
+        <h4 class="font-semibold text-gray-700 text-sm border-b pb-1">Покроковий розв’язок:</h4>
+        
+        <!-- Крок 1 -->
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-gray-700">Крок 1. Конструктор виразу початкової швидкості v₁:</label>
+          <select id="t1_expr1_select" class="select-field"></select>
+        </div>
+
+        <!-- Крок 2 -->
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-gray-700">Крок 2. Вираз v₂ після зміни об’єму (без розкриття кінцевої цифри):</label>
+          <select id="t1_expr2_select" class="select-field"></select>
+        </div>
+
+        <!-- Крок 3 -->
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-gray-700">Крок 3. Обчисліть відношення v₂ / v₁ (у скільки разів зміниться швидкість):</label>
+          <input type="number" id="t1_ratio" class="input-num text-left" placeholder="Введіть число розрахунку">
+        </div>
+
+        <!-- Крок 4 -->
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-gray-700">Крок 4. Сформулюйте підсумковий висновок:</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+            <select id="t1_dir" class="select-field mt-0">
+<option value="">— оберіть —</option>
+              <option value="збільшиться">збільшиться</option>
+              <option value="зменшиться">зменшиться</option>
+            </select>
+            <input type="number" id="t1_finalVal" class="input-num text-left" placeholder="у скільки разів">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between pt-3">
+        <button onclick="goToPage(1)" class="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2 rounded-md text-sm font-medium">Назад</button>
+        <button onclick="goToPage(3)" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-md text-sm shadow">Перейти до Завдання 2</button>
+      </div>
+    </div>
+
+    <!-- СТОРІНКА 3: ЗАВДАННЯ 2 -->
+    <div id="page3" class="card p-6 hidden space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-lg text-gray-800">Завдання 2 (2 бали)</h3>
+        <span class="text-xs font-semibold bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded">Принцип Ле Шательє</span>
+      </div>
+
+      <p id="t2TaskText" class="text-gray-800 font-medium bg-blue-50 p-4 rounded-md border border-blue-200 text-sm md:text-base leading-relaxed"></p>
+
+      <div class="space-y-4 bg-gray-50 p-4 rounded-md border">
+        <h4 class="font-semibold text-gray-700 text-sm border-b pb-1">Покроковий розв’язок:</h4>
+
+        <!-- Крок 1 -->
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-gray-700">Крок 1. Оберіть вираз константи рівноваги K<sub>c</sub>:</label>
+          <select id="t2_kc_select" class="select-field"></select>
+        </div>
+
+        <!-- Крок 2 -->
+        <div class="p-3 bg-white border rounded-md space-y-2">
+          <label class="block text-xs md:text-sm font-semibold text-gray-700">Крок 2. Вплив температури (а):</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <span class="text-xs text-gray-500">За значенням ΔH пряма реакція є:</span>
+              <select id="t2_type" class="select-field">
+<option value="">— оберіть —</option>
+                <option value="екзотермічною">екзотермічною (ΔH &lt; 0)</option>
+                <option value="ендотермічною">ендотермічною (ΔH &gt; 0)</option>
+              </select>
+            </div>
+            <div>
+              <span class="text-xs text-gray-500">Рівновага зміститься:</span>
+              <select id="t2_dirA" class="select-field">
+<option value="">— оберіть —</option>
+                <option value="вправо">вправо (у бік утворення продуктів)</option>
+                <option value="вліво">вліво (у бік вихідних речовин)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Крок 3 -->
+        <div class="p-3 bg-white border rounded-md space-y-2">
+          <label class="block text-xs md:text-sm font-semibold text-gray-700">Крок 3. Вплив тиску (б):</label>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div>
+              <span class="text-xs text-gray-500">V газоподібних вихідних:</span>
+              <input type="number" id="t2_vReact" class="input-num text-left" placeholder="V1">
+            </div>
+            <div>
+              <span class="text-xs text-gray-500">V газоподібних продуктів:</span>
+              <input type="number" id="t2_vProd" class="input-num text-left" placeholder="V2">
+            </div>
+            <div class="col-span-2 md:col-span-1">
+              <span class="text-xs text-gray-500">Рівновага зміститься:</span>
+              <select id="t2_dirB" class="select-field">
+<option value="">— оберіть —</option>
+                <option value="вправо">вправо</option>
+                <option value="вліво">вліво</option>
+                <option value="не зміститься">не зміститься</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between pt-3">
+        <button onclick="goToPage(2)" class="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2 rounded-md text-sm font-medium">Назад</button>
+        <button onclick="goToPage(4)" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-md text-sm shadow">Перейти до Завдання 3</button>
+      </div>
+    </div>
+
+    <!-- СТОРІНКА 4: ЗАВДАННЯ 3 -->
+    <div id="page4" class="card p-6 hidden space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-lg text-gray-800">Завдання 3 (2 бали)</h3>
+        <span class="text-xs font-semibold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded">Розрахунок K<sub>c</sub></span>
+      </div>
+
+      <p id="t3TaskText" class="text-gray-800 font-medium bg-blue-50 p-4 rounded-md border border-blue-200 text-sm md:text-base leading-relaxed"></p>
+
+      <div class="space-y-4 bg-gray-50 p-4 rounded-md border">
+        <h4 class="font-semibold text-gray-700 text-sm border-b pb-1">Інтерактивна розрахункова таблиця (заповнює студент):</h4>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs md:text-sm bg-white border rounded-md">
+            <thead>
+              <tr class="bg-gray-200 text-gray-700">
+                <th class="p-2 border">Показник (моль/л)</th>
+                <th id="th_compA" class="p-2 border w-1/5">A</th>
+                <th id="th_compB" class="p-2 border w-1/5">B</th>
+                <th id="th_compC" class="p-2 border w-1/5">C</th>
+                <th id="th_compD" class="p-2 border w-1/5">D</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="p-2 border font-medium bg-gray-50">Вихідна C₀</td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_c0_A" class="table-cell-input" placeholder="C₀(A)"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_c0_B" class="table-cell-input" placeholder="C₀(B)"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_c0_C" class="table-cell-input" placeholder="C₀(C)"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_c0_D" class="table-cell-input" placeholder="C₀(D)"></td>
+              </tr>
+              <tr>
+                <td class="p-2 border font-medium bg-gray-50">Зміна ΔC</td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_dc_A" class="table-cell-input" placeholder="ΔC(A)"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_dc_B" class="table-cell-input" placeholder="ΔC(B)"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_dc_C" class="table-cell-input" placeholder="ΔC(C)"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_dc_D" class="table-cell-input" placeholder="ΔC(D)"></td>
+              </tr>
+              <tr>
+                <td class="p-2 border font-medium bg-gray-50">Рівноважна [ ]</td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_eq_A" class="table-cell-input" placeholder="[A]"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_eq_B" class="table-cell-input" placeholder="[B]"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_eq_C" class="table-cell-input" placeholder="[C]"></td>
+                <td class="p-1 border"><input type="number" step="any" id="t3_eq_D" class="table-cell-input" placeholder="[D]"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pt-2">
+          <label class="block text-xs md:text-sm font-semibold text-gray-700">Обчисліть підсумкове значення константи рівноваги K<sub>c</sub> (округлюйте до десятих, наприклад: 12.3):</label>
+          <input type="number" step="any" id="t3_kc" class="input-num text-left font-bold text-blue-700 text-lg" placeholder="Kc = ...">
+        </div>
+      </div>
+
+      <div class="flex justify-between pt-3">
+        <button onclick="goToPage(3)" class="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2 rounded-md text-sm font-medium">Назад</button>
+        <button onclick="goToPage(5)" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-md text-sm shadow">Перейти до Завдання 4</button>
+      </div>
+    </div>
+
+    <!-- СТОРІНКА 5: ЗАВДАННЯ 4 -->
+    <div id="page5" class="card p-6 hidden space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-lg text-gray-800">Завдання 4 (2 бали)</h3>
+        <span class="text-xs font-semibold bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded">Правило Вант-Гоффа</span>
+      </div>
+
+      <p id="t4TaskText" class="text-gray-800 font-medium bg-blue-50 p-4 rounded-md border border-blue-200 text-sm md:text-base leading-relaxed"></p>
+
+      <div class="space-y-4 bg-gray-50 p-4 rounded-md border">
+        <h4 class="font-semibold text-gray-700 text-sm border-b pb-1">Покроковий розв’язок:</h4>
+
+        <!-- Крок 1: Формула (Чистий текст без знаків ^ або gamma) -->
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-gray-700">Крок 1. Оберіть математичну формулу Правила Вант-Гоффа:</label>
+          <div id="t4_formula_box" class="space-y-2 mt-1"></div>
+          <input type="hidden" id="t4_formula_select" value="">
+        </div>
+
+        <!-- Крок 2: Показник n -->
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-gray-700">Крок 2. Розрахуйте показник ступеня (n = ΔT / 10):</label>
+          <input type="number" step="any" id="t4_n" class="input-num text-left" placeholder="n = ...">
+        </div>
+
+        <!-- Крок 3: Результат -->
+        <div>
+          <label class="block text-xs md:text-sm font-medium text-gray-700">Крок 3. Обчисліть, у скільки разів збільшиться швидкість реакції (v₂ / v₁):</label>
+          <input type="number" step="any" id="t4_ans" class="input-num text-left text-lg font-bold text-green-700" placeholder="Введіть кінцеве число">
+        </div>
+      </div>
+
+      <div class="flex justify-between pt-3">
+        <button onclick="goToPage(4)" class="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2 rounded-md text-sm font-medium">Назад</button>
+        <button onclick="calculateAndShowReport()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2.5 rounded-md transition text-sm shadow">
+          Завершити та сформувати звіт
+        </button>
+      </div>
+    </div>
+
+    <!-- СТОРІНКА 6: ПІДСУМКОВИЙ ЗВІТ ДЛЯ PDF -->
+    <div id="page6" class="card p-6 hidden space-y-4">
+      <div id="pdfContainer" class="p-4 bg-white border rounded-md space-y-3">
+        <div class="border-b-2 border-blue-600 pb-2">
+          <h2 class="text-lg font-bold text-gray-800">ЗВІТ ПРО ВИКОНАННЯ ПРАКТИЧНОЇ РОБОТИ № 3</h2>
+          <p class="text-xs text-gray-600">Харківський машинобудівний фаховий коледж | Хімічна рівновага</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2.5 rounded border">
+          <p><strong>Студент:</strong> <span id="pdfStudent"></span></p>
+          <p><strong>Група:</strong> <span id="pdfGroup"></span></p>
+          <p><strong>Варіант:</strong> <span id="pdfVariant"></span></p>
+          <p><strong>Підсумкова оцінка:</strong> <span id="pdfScore" class="text-blue-700 font-bold text-base"></span> / 8.00 балів</p>
+        </div>
+
+        <div class="border-t pt-2">
+          <h3 class="font-bold text-gray-800 text-xs mb-2">Детальний покроковий аналіз та оцінювання відповідей:</h3>
+          <div id="pdfDetails" class="space-y-2.5"></div>
+        </div>
+      </div>
+
+      <div class="pt-2 no-print">
+        <button onclick="downloadPDF()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-md transition text-base shadow">
+          Зберегти звіт у PDF для Google Classroom
+        </button>
+        <p class="text-xs text-gray-500 mt-2 text-center">У вікні друку оберіть принтер «Зберегти як PDF» і натисніть «Зберегти».</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Перемішування масивів (Fisher-Yates)
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // Точна база варіантів (усі 30 варіантів мають правильні константи K_c)
+    const variantsData = {
+      1: {
+        t1: { text: "Як зміниться швидкість реакції A(г) + 2B(г) = C(г), якщо зменшити об’єм реакційної посудини в 4 рази?", expr1: "v₁ = k · [A] · [B]²", expr2: "v₂ = k · [4A] · [4B]²", ratio: 64, dir: "збільшиться", opts1: ["v₁ = k · [A] · [B]²", "v₁ = k · [A]² · [B]", "v₁ = k · [A] · [B]", "v₁ = k · [A]² · [B]²"], opts2: ["v₂ = k · [4A] · [4B]²", "v₂ = k · [4A] · [4B]", "v₂ = k · [A] · [4B]²", "v₂ = k · [4A]² · [4B]²"] },
+        t2: { text: "Написати вираз константи рівноваги оборотної реакції: N₂(г) + 3H₂(г) ⇆ 2NH₃(г), ΔH°₂₉₈ = -92 кДж/моль. Визначити зміщення рівноваги при: а) зниженні температури; б) зниженні тиску.", kcExpr: "K = [NH₃]² / ([N₂] · [H₂]³)", type: "екзотермічною", dirA: "вправо", vR: 4, vP: 2, dirB: "вліво", optsKc: ["K = [NH₃]² / ([N₂] · [H₂]³)", "K = ([N₂] · [H₂]³) / [NH₃]²", "K = [NH₃] / ([N₂] · [H₂])", "K = [NH₃]² / ([N₂]³ · [H₂])"] },
+        t3: { text: "Вихідні концентрації речовин A і B дорівнюють 2.5 моль/л кожна (продуктів на початку немає). Після встановлення хімічної рівноваги [C] = 3 моль/л. Розрахуйте константу рівноваги системи: A + B ⇆ 2C + 2D", compA: "A", compB: "B", compC: "C", compD: "D", coef: {A:1,B:1,C:2,D:2}, c0: {A:2.5,B:2.5}, known: {comp:"C", eq:3} },
+        t4: { text: "В скільки разів збільшиться швидкість хімічної реакції при збільшенні температури на 50°, якщо температурний коефіцієнт швидкості дорівнює 2?", n: 5, ans: 32 }
+      },
+      2: {
+        t1: { text: "Як зміниться швидкість реакції 3A(г) + 2B(г) = C(г), якщо зменшити об’єм реакційної посудини в 2 рази?", expr1: "v₁ = k · [A]³ · [B]²", expr2: "v₂ = k · [2A]³ · [2B]²", ratio: 32, dir: "збільшиться", opts1: ["v₁ = k · [A]³ · [B]²", "v₁ = k · [A]² · [B]³", "v₁ = k · [A] · [B]²", "v₁ = k · [A]³ · [B]"], opts2: ["v₂ = k · [2A]³ · [2B]²", "v₂ = k · [2A] · [2B]", "v₂ = k · [2A]³ · [B]²", "v₂ = k · [2A]² · [2B]³"] },
+        t2: { text: "Написати вираз константи рівноваги оборотної реакції: CO(г) + H₂(г) ⇆ C(тв) + H₂O(г), ΔH°₂₉₈ = -139 кДж/моль. Визначити зміщення рівноваги при: а) зниженні температури; б) зниженні тиску.", kcExpr: "K = [H₂O] / ([CO] · [H₂])", type: "екзотермічною", dirA: "вправо", vR: 2, vP: 1, dirB: "вліво", optsKc: ["K = [H₂O] / ([CO] · [H₂])", "K = ([C] · [H₂O]) / ([CO] · [H₂])", "K = ([CO] · [H₂]) / [H₂O]", "K = [H₂O]² / ([CO] · [H₂])"] },
+        t3: { text: "Вихідні концентрації речовин A і B дорівнюють 3 моль/л кожна (продуктів на початку немає). Після встановлення хімічної рівноваги [C] = 3 моль/л. Розрахуйте константу рівноваги системи: A + B ⇆ 3C + 2D", compA: "A", compB: "B", compC: "C", compD: "D", coef: {A:1,B:1,C:3,D:2}, c0: {A:3,B:3}, known: {comp:"C", eq:3} },
+        t4: { text: "В скільки разів збільшиться швидкість хімічної реакції при збільшенні температури на 30°, якщо температурний коефіцієнт швидкості дорівнює 3?", n: 3, ans: 27 }
+      },
+      3: {
+        t1: { text: "Як зміниться швидкість реакції 4A(г) + B(г) = C(г), якщо збільшити об’єм реакційної посудини в 4 рази?", expr1: "v₁ = k · [A]⁴ · [B]", expr2: "v₂ = k · [A/4]⁴ · [B/4]", ratio: 1024, dir: "зменшиться", opts1: ["v₁ = k · [A]⁴ · [B]", "v₁ = k · [A] · [B]⁴", "v₁ = k · [A]⁴ · [B]⁴", "v₁ = k · [A] · [B]"], opts2: ["v₂ = k · [A/4]⁴ · [B/4]", "v₂ = k · [4A]⁴ · [4B]", "v₂ = k · [A/4] · [B/4]", "v₂ = k · [A/4]⁴ · [B]"] },
+        t2: { text: "Написати вираз константи рівноваги оборотної реакції: 2NO(г) + O₂(г) ⇆ 2NO₂(г), ΔH°₂₉₈ = -116 кДж/моль. Визначити зміщення рівноваги при: а) зниженні температури; б) зниженні тиску.", kcExpr: "K = [NO₂]² / ([NO]² · [O₂])", type: "екзотермічною", dirA: "вправо", vR: 3, vP: 2, dirB: "вліво", optsKc: ["K = [NO₂]² / ([NO]² · [O₂])", "K = ([NO]² · [O₂]) / [NO₂]²", "K = [NO₂] / ([NO] · [O₂])", "K = [NO₂]² / ([NO] · [O₂]²)"] },
+        t3: { text: "Вихідні концентрації речовин A і B дорівнюють 5 моль/л кожна (продуктів на початку немає). Після встановлення хімічної рівноваги [A] = 2 моль/л. Розрахуйте константу рівноваги системи: 2A + B ⇆ 3C + 2D", compA: "A", compB: "B", compC: "C", compD: "D", coef: {A:2,B:1,C:3,D:2}, c0: {A:5,B:5}, known: {comp:"A", eq:2} },
+        t4: { text: "В скільки разів збільшиться швидкість хімічної реакції при збільшенні температури на 40°, якщо температурний коефіцієнт швидкості дорівнює 3?", n: 4, ans: 81 }
+      }
+    };
+
+    // Автоматичне наповнення 30 варіантів на основі стандартних задач
+    for (let i = 4; i <= 30; i++) {
+      if (!variantsData[i]) {
+        const base = variantsData[((i - 1) % 3) + 1];
+        variantsData[i] = JSON.parse(JSON.stringify(base));
+      }
+    }
+
+    let selectedVar = 1;
+
+    function solveT3(t) {
+      const R = ['A','B'], k = t.known, sign = R.includes(k.comp) ? -1 : 1;
+      const x = sign * (k.eq - (t.c0[k.comp] || 0)) / t.coef[k.comp];
+      const eq = {};
+      ['A','B','C','D'].forEach(c => { eq[c] = Number(((t.c0[c] || 0) + (R.includes(c) ? -1 : 1) * t.coef[c] * x).toFixed(2)); });
+      const kc = Math.pow(eq.C, t.coef.C) * Math.pow(eq.D, t.coef.D) / (Math.pow(eq.A, t.coef.A) * Math.pow(eq.B, t.coef.B));
+      return { eq, kc };
+    }
+
+    const vs = document.getElementById('variantSelect');
+    for (let i = 1; i <= 30; i++) vs.add(new Option('Варіант ' + i, i));
+
+    // Списки формул Вант-Гоффа (Чисті Юнікод символи для перевірки без розбіжностей)
+    const CORRECT_VANTHOFF_FORMULA = "ok";
+    const vantHoffFormulas = [
+      { v: "ok", html: "v<sub>2</sub> / v<sub>1</sub> = γ<sup>(T<sub>2</sub> − T<sub>1</sub>) / 10</sup>" },
+      { v: "b",  html: "v<sub>2</sub> / v<sub>1</sub> = γ · (T<sub>2</sub> − T<sub>1</sub>) / 10" },
+      { v: "c",  html: "v<sub>2</sub> / v<sub>1</sub> = (T<sub>2</sub> − T<sub>1</sub>) / 10" },
+      { v: "d",  html: "v<sub>2</sub> / v<sub>1</sub> = γ<sup>10</sup> / (T<sub>2</sub> − T<sub>1</sub>)" }
+    ];
+
+    function renderFormulas() {
+      const box = document.getElementById('t4_formula_box');
+      const hid = document.getElementById('t4_formula_select');
+      hid.value = '';
+      box.innerHTML = '';
+      shuffleArray(vantHoffFormulas).forEach(f => {
+        const lab = document.createElement('label');
+        lab.className = 'flex items-center gap-3 p-2.5 bg-white border rounded-md cursor-pointer hover:bg-blue-50';
+        lab.innerHTML = `<input type="radio" name="t4_formula" value="${f.v}"><span class="text-sm md:text-base">${f.html}</span>`;
+        lab.querySelector('input').addEventListener('change', e => { hid.value = e.target.value; });
+        box.appendChild(lab);
+      });
+    }
+
+    function startWork() {
+      const name = document.getElementById('studentName').value.trim();
+      const group = document.getElementById('studentGroup').value.trim();
+      const v = document.getElementById('variantSelect').value;
+
+      if (!name || !group || !v) {
+        alert('Будь ласка, заповніть усі поля авторизації (Прізвище, Група, Варіант)!');
+        return;
+      }
+      selectedVar = parseInt(v);
+      loadVariantData(selectedVar);
+      goToPage(2);
+    }
+
+    function goToPage(page) {
+      for (let i = 1; i <= 6; i++) {
+        const el = document.getElementById(`page${i}`);
+        if (el) el.classList.add('hidden');
+      }
+      const targetPage = document.getElementById(`page${page}`);
+      if (targetPage) targetPage.classList.remove('hidden');
+      document.getElementById('pageIndicator').innerText = `Крок ${page} з 6`;
+      window.scrollTo(0, 0);
+    }
+
+    function loadVariantData(v) {
+      const data = variantsData[v] || variantsData[1];
+      
+      // Завдання 1
+      document.getElementById('t1TaskText').innerText = data.t1.text;
+      populateSelect('t1_expr1_select', shuffleArray(data.t1.opts1));
+      populateSelect('t1_expr2_select', shuffleArray(data.t1.opts2));
+
+      // Завдання 2
+      document.getElementById('t2TaskText').innerText = data.t2.text;
+      populateSelect('t2_kc_select', shuffleArray(data.t2.optsKc));
+
+      // Завдання 3
+      document.getElementById('t3TaskText').innerText = data.t3.text;
+      document.getElementById('th_compA').innerText = data.t3.compA;
+      document.getElementById('th_compB').innerText = data.t3.compB;
+      document.getElementById('th_compC').innerText = data.t3.compC;
+      document.getElementById('th_compD').innerText = data.t3.compD;
+
+      // Завдання 4: Чисті формули без спеціальних символів ^
+      document.getElementById('t4TaskText').innerText = data.t4.text;
+      renderFormulas();
+    }
+
+    function populateSelect(id, options) {
+      const sel = document.getElementById(id);
+      sel.innerHTML = '<option value="">-- Оберіть правильний варіант зі списку --</option>';
+      options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.innerText = opt;
+        sel.appendChild(o);
+      });
+    }
+
+    function calculateAndShowReport() {
+      const data = variantsData[selectedVar] || variantsData[1];
+      let totalScore = 0;
+      let html = '';
+
+      // ----------------- Перевірка Завдання 1 -----------------
+      const t1_e1 = document.getElementById('t1_expr1_select').value;
+      const t1_e2 = document.getElementById('t1_expr2_select').value;
+      const t1_rat = parseFloat(document.getElementById('t1_ratio').value);
+      const t1_d = document.getElementById('t1_dir').value;
+      const t1_val = parseFloat(document.getElementById('t1_finalVal').value);
+
+      let s1 = 0;
+      let err1 = [];
+      if (t1_e1 === data.t1.expr1) { s1 += 0.5; } else { err1.push(`Неправильний вираз v₁ (${t1_e1 || 'не обрано'}). Правильно: ${data.t1.expr1}`); }
+      if (t1_e2 === data.t1.expr2) { s1 += 0.5; } else { err1.push(`Неправильний вираз v₂ (${t1_e2 || 'не обрано'}). Правильно: ${data.t1.expr2}`); }
+      if (t1_rat === data.t1.ratio) { s1 += 0.5; } else { err1.push(`Невірне відношення v₂/v₁ (${t1_rat || 0}). Правильно: ${data.t1.ratio}`); }
+      if (t1_d === data.t1.dir && t1_val === data.t1.ratio) { s1 += 0.5; } else { err1.push(`Невірний висновок (${t1_d} у ${t1_val||0} р.). Правильно: ${data.t1.dir} у ${data.t1.ratio} р.`); }
+      totalScore += s1;
+
+      html += `<div class="pdf-card">
+        <div class="flex justify-between font-bold text-gray-800">
+          <span>Завдання 1: Закон діючих мас</span>
+          <span class="${s1 === 2 ? 'text-green-600' : 'text-amber-600'}">${s1.toFixed(2)} / 2.00 балів</span>
+        </div>
+        <p class="text-xs mt-1"><strong>Обрано:</strong> v1 = "${t1_e1||'-'}", v2 = "${t1_e2||'-'}", відношення = ${t1_rat||0}, висновок = ${t1_d} у ${t1_val||0} р.</p>
+        ${err1.length > 0 ? `<div class="text-xs text-red-600 bg-red-50 p-1.5 rounded mt-1"><strong>Аналіз помилок:</strong><br>${err1.join('<br>')}</div>` : '<p class="text-xs text-green-600 font-semibold mt-0.5">✓ Всі кроки виконано вірно!</p>'}
+      </div>`;
+
+      // ----------------- Перевірка Завдання 2 -----------------
+      const t2_kc = document.getElementById('t2_kc_select').value;
+      const t2_tp = document.getElementById('t2_type').value;
+      const t2_dA = document.getElementById('t2_dirA').value;
+      const t2_vR = parseFloat(document.getElementById('t2_vReact').value);
+      const t2_vP = parseFloat(document.getElementById('t2_vProd').value);
+      const t2_dB = document.getElementById('t2_dirB').value;
+
+      let s2 = 0;
+      let err2 = [];
+      if (t2_kc === data.t2.kcExpr) { s2 += 0.5; } else { err2.push(`Помилка у виразі K<sub>c</sub>. Правильно: ${data.t2.kcExpr}`); }
+      if (t2_tp === data.t2.type && t2_dA === data.t2.dirA) { s2 += 0.75; } else { err2.push(`Помилка температури (а): пряма реакція ${data.t2.type}, тому рівновага зміститься ${data.t2.dirA}`); }
+      if (t2_vR === data.t2.vR && t2_vP === data.t2.vP && t2_dB === data.t2.dirB) { s2 += 0.75; } else { err2.push(`Помилка тиску (б): об’єми газів ${data.t2.vR} -> ${data.t2.vP}, рівновага зміститься ${data.t2.dirB}`); }
+      totalScore += s2;
+
+      html += `<div class="pdf-card">
+        <div class="flex justify-between font-bold text-gray-800">
+          <span>Завдання 2: Принцип Ле Шательє</span>
+          <span class="${s2 === 2 ? 'text-green-600' : 'text-amber-600'}">${s2.toFixed(2)} / 2.00 балів</span>
+        </div>
+        <p class="text-xs mt-1"><strong>Обрано:</strong> K<sub>c</sub> = "${t2_kc||'-'}", Температура = ${t2_dA}, Тиск = ${t2_dB} (об’єми: ${t2_vR||0} -> ${t2_vP||0}).</p>
+        ${err2.length > 0 ? `<div class="text-xs text-red-600 bg-red-50 p-1.5 rounded mt-1"><strong>Аналіз помилок:</strong><br>${err2.join('<br>')}</div>` : '<p class="text-xs text-green-600 font-semibold mt-0.5">✓ Всі кроки виконано вірно!</p>'}
+      </div>`;
+
+      // ----------------- Перевірка Завдання 3 -----------------
+      const t3_kcVal = parseFloat(document.getElementById('t3_kc').value);
+      let s3 = 0;
+      let err3 = [];
+      const sol = solveT3(data.t3);
+      if (Math.abs(t3_kcVal - sol.kc) <= Math.max(0.1, sol.kc * 0.01)) {
+        s3 = 2.0;
+      } else {
+        err3.push(`Невірне значення Kc (${t3_kcVal||0}). Правильно: Kc = ${sol.kc.toFixed(1)}; рівноважні [A]=${sol.eq.A}, [B]=${sol.eq.B}, [C]=${sol.eq.C}, [D]=${sol.eq.D} моль/л`);
+      }
+      totalScore += s3;
+
+      html += `<div class="pdf-card">
+        <div class="flex justify-between font-bold text-gray-800">
+          <span>Завдання 3: Розрахунок рівноважної константи</span>
+          <span class="${s3 === 2 ? 'text-green-600' : 'text-amber-600'}">${s3.toFixed(2)} / 2.00 балів</span>
+        </div>
+        <p class="text-xs mt-1"><strong>Введено K<sub>c</sub>:</strong> ${t3_kcVal||0}</p>
+        ${err3.length > 0 ? `<div class="text-xs text-red-600 bg-red-50 p-1.5 rounded mt-1"><strong>Аналіз помилок:</strong><br>${err3.join('<br>')}</div>` : '<p class="text-xs text-green-600 font-semibold mt-0.5">✓ Константу рівноваги обчислено абсолютно вірно!</p>'}
+      </div>`;
+
+      // ----------------- Перевірка Завдання 4 (Точна строкова відповідність) -----------------
+      const t4_form = document.getElementById('t4_formula_select').value;
+      const t4_nVal = parseFloat(document.getElementById('t4_n').value);
+      const t4_ansVal = parseFloat(document.getElementById('t4_ans').value);
+
+      let s4 = 0;
+      let err4 = [];
+      if (t4_form === CORRECT_VANTHOFF_FORMULA) { 
+        s4 += 0.5; 
+      } else { 
+        err4.push(`Обрано хибну формулу Вант-Гоффа. Правильно: ${vantHoffFormulas[0].html}`); 
+      }
+      
+      if (t4_nVal === data.t4.n) { 
+        s4 += 0.5; 
+      } else { 
+        err4.push(`Помилка у ступені n (${t4_nVal||0}). Правильно: n = ΔT/10 = ${data.t4.n}`); 
+      }
+      
+      if (Math.abs(t4_ansVal - data.t4.ans) < 0.1) { 
+        s4 += 1.0; 
+      } else { 
+        err4.push(`Помилка у кінцевому розрахунку (${t4_ansVal||0}). Швидкість збільшиться у ${data.t4.ans} разів`); 
+      }
+      totalScore += s4;
+
+      html += `<div class="pdf-card">
+        <div class="flex justify-between font-bold text-gray-800">
+          <span>Завдання 4: Правило Вант-Гоффа</span>
+          <span class="${s4 === 2 ? 'text-green-600' : 'text-amber-600'}">${s4.toFixed(2)} / 2.00 балів</span>
+        </div>
+        <p class="text-xs mt-1"><strong>Введено:</strong> n = ${t4_nVal||0}, кратність v₂/v₁ = ${t4_ansVal||0}</p>
+        ${err4.length > 0 ? `<div class="text-xs text-red-600 bg-red-50 p-1.5 rounded mt-1"><strong>Аналіз помилок:</strong><br>${err4.join('<br>')}</div>` : '<p class="text-xs text-green-600 font-semibold mt-0.5">✓ Всі розрахунки за правилом Вант-Гоффа виконано вірно!</p>'}
+      </div>`;
+
+      document.getElementById('pdfStudent').innerText = document.getElementById('studentName').value;
+      document.getElementById('pdfGroup').innerText = document.getElementById('studentGroup').value;
+      document.getElementById('pdfVariant').innerText = selectedVar;
+      document.getElementById('pdfScore').innerText = totalScore.toFixed(2);
+      document.getElementById('pdfDetails').innerHTML = html;
+
+      goToPage(6);
+    }
+
+    // Завантаження PDF із точними налаштуваннями проти обрізання
+    function downloadPDF() {
+      const old = document.title;
+      const name = document.getElementById('studentName').value.trim().replace(/\s+/g, '_');
+      const group = document.getElementById('studentGroup').value.trim().replace(/\s+/g, '_');
+      document.title = `ПР3_${group}_${name}`;
+      window.onafterprint = () => { document.title = old; };
+      window.scrollTo(0, 0);
+      window.print();
+    }
+  </script>
+</body>
+</html>
